@@ -7,3 +7,13 @@ decile_distil.egg-info/
 distil/active_learning_strategies/glister_new.py
 distil/active_learning_strategies/glister_full.py
 docs/build/
+tutorials/image_classification/cifar-10-python.tar.gz
+tutorials/image_classification/cifar-10-batches-py/batches.meta
+tutorials/image_classification/cifar-10-batches-py/data_batch_1
+tutorials/image_classification/cifar-10-batches-py/data_batch_2
+tutorials/image_classification/cifar-10-batches-py/data_batch_3
+tutorials/image_classification/cifar-10-batches-py/data_batch_4
+tutorials/image_classification/cifar-10-batches-py/data_batch_5
+tutorials/image_classification/cifar-10-batches-py/readme.html
+tutorials/image_classification/cifar-10-batches-py/test_batch
+tutorials/image_classification/models/base_model.pth

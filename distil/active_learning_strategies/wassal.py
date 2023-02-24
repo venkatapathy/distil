@@ -39,7 +39,7 @@ class WASSAL(Strategy):
         super(WASSAL, self).__init__(labeled_dataset, unlabeled_dataset, net, nclasses, args)        
         self.query_dataset = labeled_dataset
 
-    def _proj_simplex(v):
+    def _proj_simplex(self,v):
         """
         v: PyTorch Tensor to be projected to a simplex
 
@@ -83,19 +83,20 @@ class WASSAL(Strategy):
             print('There are',unlabeled_dataset_len,'Unlabeled dataset')
         
         #uniform distribution of weights
-        simplex_target= Variable(torch.ones(unlabeled_dataset_len, requires_grad=True, device=self.args['device'])/unlabeled_dataset_len)
+        simplex_target= Variable(torch.ones(unlabeled_dataset_len, requires_grad=True, device=self.device)/unlabeled_dataset_len)
         query_dataset_len = len(self.query_dataset)
         beta = torch.ones(query_dataset_len)/query_dataset_len
         loss_func = SamplesLoss("sinkhorn", p=2, blur=0.05, scaling=0.8)
         unlabeled_dataloader = DataLoader(dataset=self.unlabeled_dataset, batch_size=unlabeled_dataset_len, shuffle=False)
-        target_dataloader = DataLoader(dataset=self.query_dataset, batch_size=100, shuffle=False)
+        target_dataloader = DataLoader(dataset=self.query_dataset, batch_size=1000, shuffle=False)
         unlabeled_iter = iter(unlabeled_dataloader)
         target_iter=iter(target_dataloader)
         unlabeled_imgs=next(unlabeled_iter)
         target_imgs=next(target_iter)
-        unlabeled_imgs = unlabeled_imgs.to(self.args['device'])
-        target_imgs=unlabeled_imgs.to(self.args['device'])
-        beta = beta.to(self.args['device'])
+        unlabeled_imgs = unlabeled_imgs.to(self.device)
+        unlabeled_imgs.requires_grad = True
+        target_imgs=target_imgs[0].to(self.device)
+        beta = beta.to(self.device)
         optimizer = torch.optim.Adam([simplex_target], lr=self.args['wd_lr'])
         
         for i in range(self.args['wd_num_epochs']):
@@ -104,9 +105,11 @@ class WASSAL(Strategy):
             loss.backward()
             optimizer.step()
             with torch.no_grad():
-                simplex_target.copy_(Variable(self.proj_simplex(simplex_target.cpu().detach()).to(args['device'])))
+                simplex_target.copy_(Variable(self._proj_simplex(simplex_target.cpu().detach()).to(self.device)))
 
-        _,indices=torch.sort(simplex_target)
+        if(self.args['verbose']):
+            print('WD')
+        _,indices=torch.sort(simplex_target,descending=True)
 
 
 
