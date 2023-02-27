@@ -100,6 +100,7 @@ class WASSAL(Strategy):
         optimizer = torch.optim.Adam([simplex_target], lr=self.args['wd_lr'])
         
         for i in range(self.args['wd_num_epochs']):
+            simplex_target.requires_grad = True
             optimizer.zero_grad()
             loss=loss_func(simplex_target, unlabeled_imgs.view(len(unlabeled_imgs), -1), beta, target_imgs.view(len(target_imgs), -1))
             loss.backward()
@@ -107,10 +108,11 @@ class WASSAL(Strategy):
             with torch.no_grad():
                 simplex_target.copy_(Variable(self._proj_simplex(simplex_target.cpu().detach()).to(self.device)))
 
+        sorted_simplex,indices=torch.sort(simplex_target,descending=True)
         if(self.args['verbose']):
-            print('WD')
-        _,indices=torch.sort(simplex_target,descending=True)
+            print('length of unlabelled dataset',str(len(unlabeled_imgs)))
+            print('Totals Probability of the budget:',str(torch.sum(sorted_simplex[:budget])))
+            
 
 
-
-        return indices[:budget]
+        return torch.Tensor.tolist(indices[:budget])
